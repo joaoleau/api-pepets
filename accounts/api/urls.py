@@ -3,33 +3,39 @@ from posts.views import AccountPostsListView
 from .views import (
     RegisterView,
     LoginView,
+    PasswordResetConfirmView,
+    EmailVerifyView,
     PasswordResetView,
-    CodeVerifyView,
-    EmailPasswordResetView,
     TokenVerifyView,
     TokenRefreshView,
     AccountsDetailsView,
     AccountsListView,
+    AccountMeView,
 )
 
 
 urlpatterns = [
     path("accounts/", AccountsListView.as_view(), name="rest_accounts_list"),
-    path("accounts/<str:slug>/", AccountsDetailsView.as_view(), name="rest_account_detail"),
+    path(
+        "accounts/<str:slug>/",
+        AccountsDetailsView.as_view(),
+        name="rest_account_detail",
+    ),
+    path("me/", AccountMeView.as_view(), name="rest_account_me_detail"),
 ]
 
 
 urlpatterns += [
-    path("verify/", CodeVerifyView.as_view(), name="rest_account_verify"),
+    path("verify/<uuid:uuid>/", EmailVerifyView.as_view(), name="rest_account_verify"),
     path("register/", RegisterView.as_view(), name="rest_account_register"),
     path(
         "reset/password/",
-        EmailPasswordResetView.as_view(),
+        PasswordResetView.as_view(),
         name="rest_email_reset_password",
     ),
     path(
-        "reset/password/confirm/<str:slug>/<str:code>/",
-        PasswordResetView.as_view(),
+        "reset/password/confirm/<uuid:uuid>/",
+        PasswordResetConfirmView.as_view(),
         name="rest_reset_password",
     ),
 ]

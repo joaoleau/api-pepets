@@ -23,22 +23,18 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = ("first_name", "last_name", "email", "phone")
 
 
-class CodeSerializer(serializers.Serializer):
-    email = serializers.CharField(write_only=True, required=True)
-    code = serializers.CharField(write_only=True, required=True)
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(
+        write_only=True, style={"input_type": "password"}
+    )
+    re_new_password = serializers.CharField(
+        write_only=True, style={"input_type": "password"}
+    )
 
 
 class PasswordResetSerializer(serializers.Serializer):
-    new_password1 = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
-    )
-    new_password2 = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
-    )
-
-
-class EmailPasswordResetSerializer(serializers.Serializer):
-    email = serializers.CharField(write_only=True, style={"input_type": "email"})
+    email = serializers.CharField(
+        write_only=True, style={"input_type": "email"})
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -46,15 +42,18 @@ class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=100, required=True)
     last_name = serializers.CharField(max_length=100, required=True)
     email = serializers.EmailField(max_length=100, required=True)
-    password1 = serializers.CharField(write_only=True, style={"input_type": "password"})
-    password2 = serializers.CharField(write_only=True, style={"input_type": "password"})
+    password = serializers.CharField(
+        write_only=True, style={"input_type": "password"})
+    re_password = serializers.CharField(
+        write_only=True, style={"input_type": "password"}
+    )
 
     def create(self, validated_data):
-        password = validated_data.pop("password1")
+        password = validated_data.pop("password")
         email = validated_data.pop("email")
         first_name = validated_data.pop("first_name")
         last_name = validated_data.pop("last_name")
-        validated_data.pop("password2")
+        validated_data.pop("re_password")
         user = User.objects.create_user(
             password=password,
             email=email,

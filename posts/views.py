@@ -5,18 +5,20 @@ from rest_framework.generics import (
 )
 from .permissions import IsAuthorOrIsAuthenticatedReadOnly
 from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly,
     IsAuthenticated,
 )
 from .models import Post
-from .serializers import PostsModelSerializer, PostCreateSerializer
+from .serializers import PostListSerializer, PostCreateSerializer, PostDetailSerializer
+from rest_framework.response import Response
+from rest_framework import status
+
 
 PostQuerySet = Post.objects.published()
 
 
 class AccountPostsListView(ListAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PostsModelSerializer
+    serializer_class = PostListSerializer
 
     def get_queryset(self):
         return Post.objects.filter(author__slug=self.kwargs["slug"])
@@ -28,72 +30,26 @@ class PostsCreateView(CreateAPIView):
     queryset = PostQuerySet
 
     def post(self, request, *args, **kwargs):
+        request.data["pet"]["owner"] = request.user.id
+        return self.create(request, *args, **kwargs)
 
-        request.data["author"] = request.user.id
-        return super().create(request, *args, **kwargs)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class PostDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
-    serializer_class = PostsModelSerializer
+    serializer_class = PostDetailSerializer
     queryset = PostQuerySet
-
-    # lookup_field = 'pk'
-    # lookup_url_kwarg = 'pk'
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance)
-    #     data = serializer.data
-    #     data["email"] = serializer.link()
-    #     return Response(data)
-
-    # def update(self, request, *args, **kwargs):
-    #     partial = kwargs.get("partial", False)
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(
-    #         instance=instance,
-    #         data=request.data,
-    #         partial=partial,
-    #         many=False,
-    #     )
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
-    #     data = serializer.data
-    #     data["link"] = serializer.link()
-    #     return Response(data)
+    lookup_field = "slug"
 
 
 class PostListView(ListAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    serializer_class = PostsModelSerializer
+    serializer_class = PostListSerializer
     queryset = PostQuerySet
-
-    # def get_serializer(self, *args, **kwargs):
-    #     return self.serializer_class(*args, **kwargs)
-
-    # def get_serializer_class(self):
-    #     return self.serializer_class
-
-    # def list(self, request, *args, **kwargs):
-
-    #     queryset = self.filter_queryset(self.get_queryset())
-
-    #     # page = self.paginate_queryset(queryset)
-    #     # if page is not None:
-    #     #     serializer = self.get_serializer(page, many=True)
-    #     #     return self.get_paginated_response(serializer.data)
-
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     value = serializer.link()
-    #     print(value)
-
-    # data = serializer.data
-    # data["link"] = serializer.link()
-    # return Response(data)
-
-    # def get_queryset(self):
-    #     if self.request.user.is_staff:
-    #         return Post.objects.all()
-
-    #     return self.queryset

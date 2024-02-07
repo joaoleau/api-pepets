@@ -4,9 +4,9 @@ from .managers import UserManager
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 from django.utils.text import slugify
-from .utils import create_code
 import string
 import random
+import uuid
 
 
 class User(AbstractUser):
@@ -23,7 +23,11 @@ class User(AbstractUser):
         CUSTOMER = "customer", "Customer"
 
     slug = models.SlugField(
-        verbose_name="A short label for URLs", max_length=100, blank=True, null=True
+        verbose_name="A short label for URLs",
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
     )
     phone_regex = RegexValidator(
         regex=r"^\+?1?\d{9,12}$",
@@ -41,7 +45,7 @@ class User(AbstractUser):
     email_validated = models.BooleanField(default=False)
     bio = models.TextField(max_length=200, blank=True)
     username = None
-    code = models.CharField(max_length=6, default=create_code())
+    _code = models.UUIDField(default=uuid.uuid4, editable=False)
 
     objects = UserManager()
 
@@ -49,10 +53,23 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["phone", "first_name", "last_name"]
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(
-            f'{self.first_name}{"".join(random.choice(string.digits) for _ in range(4))}'
-        )
+        if not self.slug:
+            self.slug = slugify(
+                f'{self.first_name}{"".join(random.choice(string.digits) for _ in range(4))}'
+            )
         return super(User, self).save(*args, **kwargs)
+
+    @property
+    def code(self):
+        if not self._code:
+            self._code = uuid.uuid4()
+            self.save()
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        self._code = value
+        self.save()
 
     def __str__(self):
         return self.get_full_name()

@@ -4,14 +4,14 @@ from django.conf import settings
 from .serializers import (
     RegisterSerializer,
     PasswordResetSerializer,
-    CodeSerializer,
-    EmailPasswordResetSerializer,
+    PasswordResetConfirmSerializer,
     LoginSerializer,
     AccountSerializer,
     AccountsListSerializer,
 )
 from django.urls import reverse
 from rest_framework import status, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import (
     CreateAPIView,
@@ -27,6 +27,9 @@ from ..utils import send_code
 from .permissions import IsOwnerOrAdminOrReadOnlyPermission
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
+from posts.models import Post
+from posts.serializers import PostListSerializer
+
 User = get_user_model().objects.all()
 
 
@@ -36,6 +39,14 @@ class RefreshTokenView(TokenRefreshView):
 
 class VerifyTokenView(TokenVerifyView):
     pass
+
+
+class AccountMeView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        return Post.objects.filter(pet__owner__id=self.request.user.id)
 
 
 class LoginView(TokenObtainPairView):
@@ -69,8 +80,8 @@ class AccountsListView(ListAPIView):
         return super().list(request, *args, **kwargs)
 
 
-class PasswordResetView(CreateAPIView):
-    serializer_class = PasswordResetSerializer
+class PasswordResetConfirmView(CreateAPIView):
+    serializer_class = PasswordResetConfirmSerializer
     queryset = User
 
     def get_object(self):
@@ -78,43 +89,42 @@ class PasswordResetView(CreateAPIView):
         return obj
 
     def post(self, request, *args, **kwargs):
-        password1 = request.data.pop("new_password1", None)
-        password2 = request.data.pop("new_password2", None)
+        password = request.data.pop("new_password", None)
+        re_password = request.data.pop("re_new_password", None)
 
-        if (password1 or password2) is None:
+        if (password or re_password) is None:
             data = {"error": "new_password não foi inserida"}
             return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
 
-        if password1 != password2:
-            data = {"error": "new_password1 e new_password2 são diferentes"}
+        if password != re_password:
+            data = {"error": "new_password e re_new_password são diferentes"}
 
             return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
 
         instance = self.get_object()
-        instance.set_password(password1)
+        instance.set_password(password)
         instance.save()
 
-        href = f"{settings.MY_HOST}{reverse(viewname='posts:rest_posts_list')}"
-        data = {"links": {"ref": "home - posts list", "href": href}}
+        url = f"{settings.MY_HOST}{reverse(viewname='posts:rest_posts_list')}"
+        data = {"links": {"ref": "home - posts list", "href": url}}
 
         return Response(data=data, status=status.HTTP_200_OK)
 
 
-class EmailPasswordResetView(CreateAPIView):
-    serializer_class = EmailPasswordResetSerializer
+class PasswordResetView(CreateAPIView):
+    serializer_class = PasswordResetSerializer
     queryset = User
 
     def post(self, request, *args, **kwargs):
-        print("ASDASd")
         user = get_object_or_404(
             klass=self.queryset, email=request.data["email"])
         subject = "Email para redefinição de senha"
-        href = f"{settings.MY_HOST}{reverse(viewname='rest_reset_password', kwargs={'slug':user.slug, 'code':user.code})}"
-        message = f"Link para redefinição de senha: {href}"
+        url = f"{settings.MY_HOST}{reverse(viewname='rest_reset_password', kwargs={'slug':user.slug, 'code':user.code})}"
+        message = f"Link para redefinição de senha: {url}"
         send_code(subject=subject, message=message, email=user.email)
         data = request.data
-        data["links"] = {"ref": "redefinição de senha", "href": href}
-        return Response(data=data, restatus=status.HTTP_202_ACCEPTED)
+        data["links"] = {"ref": "redefinição de senha", "href": url}
+        return Response(data=data, status=status.HTTP_202_ACCEPTED)
 
 
 class RegisterView(CreateAPIView):
@@ -127,36 +137,28 @@ class RegisterView(CreateAPIView):
         self.perform_create(serializer)
         self.send_verification_code(request)
         headers = self.get_success_headers(serializer.data)
-        href = f"{settings.MY_HOST}{reverse(viewname='rest_account_verify')}"
-        data = serializer.data
-        data["links"] = {"ref": "verificação de email", "href": href}
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def send_verification_code(self, request):
         user = get_object_or_404(self.queryset, email=request.data["email"])
         subject = "Email para verificação da conta"
-        message = f"Seu código de verificação: {user.code}"
-        send_code(subject=subject, message=message, email=user.email)
+        verify_link = f"{settings.MY_HOST}{reverse(viewname='rest_account_verify', kwargs={'uuid':user.code})}"
+        send_code(subject=subject, message=verify_link, email=user.email)
 
     def perform_create(self, serializer):
         serializer.save()
 
 
-class CodeVerifyView(CreateAPIView):
-    serializer_class = CodeSerializer
+class EmailVerifyView(APIView):
     queryset = User
 
-    def post(self, request, *args, **kwargs):
-        print("2133213")
+    def get(self, request, *args, **kwargs):
+
         user = get_object_or_404(
-            klass=self.queryset, email=request.data["email"])
-        if request.data["code"] == user.code:
-            user.email_validated = True
-            user.save()
+            klass=self.queryset, _code=self.kwargs["uuid"])
 
-            href = f"{settings.MY_HOST}{reverse(viewname='rest_login')}"
-            data = {"links": {"ref": "login", "href": href}}
-
-            return Response(data=data, status=status.HTTP_202_ACCEPTED)
-        data = {"error": "Código inválido"}
-        return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+        user.email_validated = True
+        user.save()
+        return Response(status=status.HTTP_202_ACCEPTED)
