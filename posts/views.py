@@ -16,15 +16,23 @@ from rest_framework import status
 PostQuerySet = Post.objects.published()
 
 
-class AccountPostsListView(ListAPIView):
+class PostUserListView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        return Post.objects.filter(author__slug=self.kwargs["slug"])
+        return Post.objects.filter(pet__owner__slug=self.kwargs["slug"])
 
 
-class PostsCreateView(CreateAPIView):
+class PostMeView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        return Post.objects.filter(pet__owner__slug=self.request.user.slug)
+
+
+class PostCreateView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostCreateSerializer
     queryset = PostQuerySet
@@ -53,3 +61,7 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
 class PostListView(ListAPIView):
     serializer_class = PostListSerializer
     queryset = PostQuerySet
+
+
+class PostFilterListView(ListAPIView):
+    pass

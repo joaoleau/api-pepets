@@ -9,7 +9,7 @@ app_name = "core"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("accounts.api.urls")),
-    path("posts/", include("posts.urls")),
+    path("", include("posts.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

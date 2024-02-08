@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from accounts.api.serializers import AccountSerializer
 from .models import Post, Local, Pet
-from .utils import generate_link_post_detail
+from django.urls import reverse
+from django.conf import settings
 
 
 class LocalSerializer(serializers.ModelSerializer):
@@ -16,7 +17,7 @@ class PetListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pet
-        fields = ["owner", "last_local", "name"]
+        fields = ["owner", "last_local", "name", "image"]
 
 
 class PetDetailSerializer(serializers.ModelSerializer):
@@ -46,8 +47,11 @@ class PostListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data["object_link"] = generate_link_post_detail(slug=instance.slug)
+        data["object_url"] = self.generate_url_post_detail(slug=instance.slug)
         return data
+
+    def generate_url_post_detail(self, slug):
+        return f"{settings.MY_HOST}{reverse(viewname='posts:rest_posts_detail', kwargs={'slug':slug})}"
 
 
 class PostDetailSerializer(serializers.ModelSerializer):

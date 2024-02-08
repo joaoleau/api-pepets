@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from ..utils import generate_link_account_detail
+from django.urls import reverse
+from django.conf import settings
 
 User = get_user_model()
 
@@ -13,8 +14,27 @@ class AccountsListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data["object_link"] = generate_link_account_detail(slug=instance.slug)
+        data["object_url"] = self.generate_url_user_detail(slug=instance.slug)
         return data
+
+    def generate_url_user_detail(self, slug) -> dict:
+        return f"{settings.MY_HOST}{reverse(viewname='rest_user_detail', kwargs={'slug':slug})}"
+
+
+class UserMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "email", "phone")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["change_password"] = self.generate_url_user_change_password(
+            code=instance.code
+        )
+        return data
+
+    def generate_url_user_change_password(self, code) -> dict:
+        return f"{settings.MY_HOST}{reverse(viewname='rest_reset_password', kwargs={'uuid':code})}"
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -33,8 +53,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 
 class PasswordResetSerializer(serializers.Serializer):
-    email = serializers.CharField(
-        write_only=True, style={"input_type": "email"})
+    email = serializers.CharField(write_only=True, style={"input_type": "email"})
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -42,8 +61,7 @@ class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=100, required=True)
     last_name = serializers.CharField(max_length=100, required=True)
     email = serializers.EmailField(max_length=100, required=True)
-    password = serializers.CharField(
-        write_only=True, style={"input_type": "password"})
+    password = serializers.CharField(write_only=True, style={"input_type": "password"})
     re_password = serializers.CharField(
         write_only=True, style={"input_type": "password"}
     )
@@ -59,7 +77,7 @@ class RegisterSerializer(serializers.Serializer):
             email=email,
             first_name=first_name,
             last_name=last_name,
-            **validated_data
+            **validated_data,
         )
         return user
 

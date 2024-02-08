@@ -1,5 +1,4 @@
 from django.urls import path
-from posts.views import AccountPostsListView
 from .views import (
     RegisterView,
     LoginView,
@@ -8,26 +7,16 @@ from .views import (
     PasswordResetView,
     TokenVerifyView,
     TokenRefreshView,
-    AccountsDetailsView,
-    AccountsListView,
-    AccountMeView,
+    UserDetailView,
+    UsersListView,
+    UserMeView,
 )
 
-
+# Rotas Usuário
 urlpatterns = [
-    path("accounts/", AccountsListView.as_view(), name="rest_accounts_list"),
-    path(
-        "accounts/<str:slug>/",
-        AccountsDetailsView.as_view(),
-        name="rest_account_detail",
-    ),
-    path("me/", AccountMeView.as_view(), name="rest_account_me_detail"),
-]
-
-
-urlpatterns += [
-    path("verify/<uuid:uuid>/", EmailVerifyView.as_view(), name="rest_account_verify"),
-    path("register/", RegisterView.as_view(), name="rest_account_register"),
+    path("register/", RegisterView.as_view(), name="rest_user_register"),
+    path("verify/<uuid:uuid>/", EmailVerifyView.as_view(), name="rest_user_verify"),
+    path("me/", UserMeView.as_view(), name="rest_user_me"),
     path(
         "reset/password/",
         PasswordResetView.as_view(),
@@ -40,16 +29,19 @@ urlpatterns += [
     ),
 ]
 
-
+# Rotas SimpleJWT
 urlpatterns += [
     path("login/", LoginView.as_view(), name="rest_login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="rest_token_refresh"),
     path("token/verify/", TokenVerifyView.as_view(), name="rest_token_verify"),
 ]
 
-
+# Rotas Administrativas
 urlpatterns += [
+    path("users/", UsersListView.as_view(), name="rest_users_list"),
     path(
-        "<str:slug>/posts/", AccountPostsListView.as_view(), name="rest_account_posts"
+        "users/<str:slug>/",
+        UserDetailView.as_view(),
+        name="rest_user_detail",
     ),
 ]
