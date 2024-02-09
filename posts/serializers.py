@@ -17,7 +17,7 @@ class PetListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pet
-        fields = ["owner", "last_local", "name", "image"]
+        fields = ["owner", "last_local", "name", "image", "status"]
 
 
 class PetDetailSerializer(serializers.ModelSerializer):

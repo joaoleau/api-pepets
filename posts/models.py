@@ -21,16 +21,24 @@ class Local(models.Model):
     city = models.CharField(max_length=100, verbose_name="Cidade")
 
     def __str__(self) -> str:
-        return self.__dict__()
+        return f"{self.street}, {self.neighborhood}, {self.city}"
 
 
 class Pet(models.Model):
+    class PetType(models.TextChoices):
+        DOG = "Dog", "dog"
+        CAT = "Cat", "cat"
+        BIRD = "Bird", "bird"
+
     name = models.CharField(max_length=30, verbose_name="Nome do Pet")
     description = models.CharField(max_length=280, verbose_name="Descrição do Pet")
+    type = models.CharField(
+        max_length=5, choices=PetType.choices, verbose_name="Tipo do Pet"
+    )
     gender = models.CharField(
         max_length=7, choices=PetGenderChoices.choices, verbose_name="Gênero"
     )
-    breed = models.CharField(max_length=30, verbose_name="Raça")
+    breed = models.CharField(max_length=50, verbose_name="Raça")
     status = models.CharField(
         max_length=6, choices=PetStatusChoices.choices, verbose_name="Situação"
     )
@@ -46,12 +54,12 @@ class Pet(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Tutor")
 
     def __str__(self) -> str:
-        return f"{self.name}- {self.description}, 'last_local':{self.last_local}"
+        return f"{self.name}, 'last_local':{self.last_local}"
 
 
 class Post(BaseModel):
     description = models.CharField(max_length=280, verbose_name="Descrição")
-    title = models.CharField(max_length=30, verbose_name="Titulo")
+    title = models.CharField(max_length=50, verbose_name="Titulo")
     is_published = models.BooleanField(default=True)
     reward = models.DecimalField(
         max_digits=10,
@@ -75,3 +83,6 @@ class Post(BaseModel):
     class Meta:
         verbose_name = "Post"
         verbose_name_plural = "Posts"
+
+    def __str__(self) -> str:
+        return f"{self.title}, {self.pet}"

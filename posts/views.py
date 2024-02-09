@@ -11,9 +11,16 @@ from .models import Post
 from .serializers import PostListSerializer, PostCreateSerializer, PostDetailSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import filters
+from rest_framework import pagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 PostQuerySet = Post.objects.published()
+
+
+class PostPagination(pagination.PageNumberPagination):
+    page_size = 25
 
 
 class PostUserListView(ListAPIView):
@@ -61,7 +68,25 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
 class PostListView(ListAPIView):
     serializer_class = PostListSerializer
     queryset = PostQuerySet
+    pagination_class = PostPagination
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_fields = [
+        "pet__status",
+        "pet__type",
+        "pet__last_local__street",
+        "pet__last_local__neighborhood",
+        "pet__last_local__city",
+    ]
+    search_fields = [
+        "pet__description",
+        "description",
+        "title",
+    ]
+    ordering_fields = ["created_at"]
 
-
-class PostFilterListView(ListAPIView):
-    pass
+    def paginate_queryset(self, queryset):
+        return super().paginate_queryset(queryset)
