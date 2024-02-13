@@ -3,14 +3,15 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.urls import reverse
 from django.conf import settings
+from ..validators import name_validator, password_validator
 
 User = get_user_model()
 
 
-class AccountsListSerializer(serializers.ModelSerializer):
+class UserAdminListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        exclude = ("password",)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -45,25 +46,41 @@ class AccountSerializer(serializers.ModelSerializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     new_password = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        validators=[password_validator],
     )
     re_new_password = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        validators=[password_validator],
     )
 
 
 class PasswordResetSerializer(serializers.Serializer):
-    email = serializers.CharField(write_only=True, style={"input_type": "email"})
+    email = serializers.CharField(
+        write_only=True, style={"input_type": "email"})
 
 
 class RegisterSerializer(serializers.Serializer):
     username = None
-    first_name = serializers.CharField(max_length=100, required=True)
-    last_name = serializers.CharField(max_length=100, required=True)
+    first_name = serializers.CharField(
+        max_length=100, required=True, validators=[name_validator]
+    )
+    last_name = serializers.CharField(
+        max_length=100, required=True, validators=[name_validator]
+    )
     email = serializers.EmailField(max_length=100, required=True)
-    password = serializers.CharField(write_only=True, style={"input_type": "password"})
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        validators=[password_validator],
+    )
     re_password = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
+        write_only=True, style={"input_type": "password"}, required=True
     )
 
     def create(self, validated_data):

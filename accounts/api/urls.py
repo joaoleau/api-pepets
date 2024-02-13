@@ -38,9 +38,9 @@ urlpatterns += [
 
 # Rotas Administrativas
 urlpatterns += [
-    path("users/", UsersListView.as_view(), name="rest_users_list"),
+    path("admin-api/users/", UsersListView.as_view(), name="rest_users_list"),
     path(
-        "users/<str:slug>/",
+        "admin-api/users/<str:slug>/",
         UserDetailView.as_view(),
         name="rest_user_detail",
     ),

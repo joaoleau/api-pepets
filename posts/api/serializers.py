@@ -1,14 +1,20 @@
 from rest_framework import serializers
 from accounts.api.serializers import AccountSerializer
-from .models import Post, Local, Pet
+from ..models import Post, Local, Pet
 from django.urls import reverse
 from django.conf import settings
+from ..utils import cleaned_data
 
 
 class LocalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Local
         fields = "__all__"
+
+    def validate(self, attrs):
+        for field, value in attrs.items():
+            attrs[field] = cleaned_data(value)
+        return super().validate(attrs)
 
 
 class PetListSerializer(serializers.ModelSerializer):
@@ -17,7 +23,7 @@ class PetListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pet
-        fields = ["owner", "last_local", "name", "image", "status"]
+        fields = ["owner", "last_local", "name", "image", "status", "description"]
 
 
 class PetDetailSerializer(serializers.ModelSerializer):
@@ -28,6 +34,12 @@ class PetDetailSerializer(serializers.ModelSerializer):
         model = Pet
         fields = "__all__"
         read_only_fields = ("owner",)
+    
+    def validate(self, attrs):
+        for field, value in attrs.items():
+            if field != "last_local" and field != "owner":
+                attrs[field] = cleaned_data(value)
+        return super().validate(attrs)
 
 
 class PetCreateSerializer(serializers.ModelSerializer):
@@ -36,6 +48,12 @@ class PetCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pet
         fields = "__all__"
+
+    def validate(self, attrs):
+        for field, value in attrs.items():
+            if field != "last_local" and field != "owner":
+                attrs[field] = cleaned_data(value)
+        return super().validate(attrs)
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -80,6 +98,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+    def validate(self, attrs):
+        for field, value in attrs.items():
+            if field != "pet":
+                attrs[field] = cleaned_data(value)
+        return super().validate(attrs)
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
@@ -87,7 +111,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        exclude = ["id", "created_at", "updated_at"]
+        exclude = ["id", "created_at", "updated_at", "slug"]
 
     def create(self, validated_data):
         pet = validated_data.pop("pet")
@@ -96,3 +120,9 @@ class PostCreateSerializer(serializers.ModelSerializer):
         pet = Pet.objects.create(last_local=local, **pet)
         instance = self.Meta.model.objects.create(pet=pet, **validated_data)
         return instance
+
+    def validate(self, attrs):
+        for field, value in attrs.items():
+            if field != "pet":
+                attrs[field] = cleaned_data(value)
+        return super().validate(attrs)

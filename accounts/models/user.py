@@ -14,19 +14,8 @@ import uuid
 
 class User(AbstractUser):
 
-    class RoleOptions(models.TextChoices):
-        ADMIN = (
-            "Admin",
-            "admin",
-        )
-        STAFF = (
-            "Staff",
-            "staff",
-        )
-        USER = "User", "user"
-
     slug = models.SlugField(
-        verbose_name="A short label for URLs",
+        verbose_name=_("A short label for URLs"),
         max_length=100,
         unique=True,
         blank=True,
@@ -40,7 +29,6 @@ class User(AbstractUser):
         validators=[phone_regex], max_length=20, unique=True, blank=True, null=True
     )
     email = models.EmailField(_("email address"), max_length=100, unique=True)
-    role = models.CharField(max_length=100, default=RoleOptions.USER)
     first_name = models.CharField(_("first name"), max_length=100, blank=True)
     last_name = models.CharField(_("last name"), max_length=100, blank=True)
     updated_at = models.DateTimeField(auto_now_add=True, blank=True)

@@ -23,10 +23,9 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     LoginSerializer,
     UserMeSerializer,
-    AccountSerializer,
-    AccountsListSerializer,
+    UserAdminListSerializer
 )
-
+from ..validators import equal_password_and_re_password_validator
 
 User = get_user_model().objects.all()
 
@@ -66,14 +65,14 @@ class LoginView(TokenObtainPairView):
 
 
 class UserDetailView(RetrieveUpdateDestroyAPIView):
-    serializer_class = AccountSerializer
+    serializer_class = UserAdminListSerializer
     queryset = User
     permission_classes = [permissions.IsAdminUser]
     lookup_field = "slug"
 
 
 class UsersListView(ListAPIView):
-    serializer_class = AccountsListSerializer
+    serializer_class = UserAdminListSerializer
     queryset = User
     permission_classes = [permissions.IsAdminUser]
 
@@ -91,14 +90,7 @@ class PasswordResetConfirmView(CreateAPIView):
         password = request.data.get("new_password", None)
         re_password = request.data.get("re_new_password", None)
 
-        if (password or re_password) is None:
-            data = {"error": "A nova senha não foi inserida"}
-            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
-
-        if password != re_password:
-            data = {"error": "As senhas inseridas são diferentes"}
-
-            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+        equal_password_and_re_password_validator(password, re_password)
 
         instance = self.get_object()
         instance.set_password(password)
@@ -121,7 +113,7 @@ class PasswordResetView(CreateAPIView):
         return Response(status=status.HTTP_202_ACCEPTED)
 
     def send_email_reset_password(self, user):
-        subject = "Email para redefinição de senha"
+        subject = "Email for password reset"
         user.email_user(subject=subject, viewname="rest_reset_password")
 
 
@@ -140,7 +132,7 @@ class RegisterView(CreateAPIView):
         )
 
     def send_verification_code(self, user):
-        subject = "Email para verificação da conta"
+        subject = "Email for account verification"
         user.email_user(subject=subject, viewname="rest_user_verify")
 
     def perform_create(self, serializer):
@@ -149,6 +141,7 @@ class RegisterView(CreateAPIView):
 
 class EmailVerifyView(APIView):
     queryset = User
+    serializer_class = None
 
     def get(self, request, *args, **kwargs):
 

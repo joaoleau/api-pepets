@@ -3,6 +3,7 @@ from accounts.models import User
 from .choices import PetGenderChoices, PetStatusChoices
 from .managers import PostManager
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 import string
 import random
 
@@ -16,9 +17,9 @@ class BaseModel(models.Model):
 
 
 class Local(models.Model):
-    street = models.CharField(max_length=100, verbose_name="Rua")
-    neighborhood = models.CharField(max_length=100, verbose_name="Bairro")
-    city = models.CharField(max_length=100, verbose_name="Cidade")
+    street = models.CharField(max_length=100, verbose_name=_("Street"))
+    neighborhood = models.CharField(max_length=100, verbose_name=_("Neighborhood"))
+    city = models.CharField(max_length=100, verbose_name=_("City"))
 
     def __str__(self) -> str:
         return f"{self.street}, {self.neighborhood}, {self.city}"
@@ -30,43 +31,45 @@ class Pet(models.Model):
         CAT = "Cat", "cat"
         BIRD = "Bird", "bird"
 
-    name = models.CharField(max_length=30, verbose_name="Nome do Pet")
-    description = models.CharField(max_length=280, verbose_name="Descrição do Pet")
+    name = models.CharField(max_length=10, verbose_name=_("Pet Name"))
+    description = models.CharField(max_length=280, verbose_name=_("Pet Description"))
     type = models.CharField(
-        max_length=5, choices=PetType.choices, verbose_name="Tipo do Pet"
+        max_length=5, choices=PetType.choices, verbose_name=_("Pet Type")
     )
     gender = models.CharField(
-        max_length=7, choices=PetGenderChoices.choices, verbose_name="Gênero"
+        max_length=7, choices=PetGenderChoices.choices, verbose_name=_("Gender")
     )
-    breed = models.CharField(max_length=50, verbose_name="Raça")
+    breed = models.CharField(max_length=50, verbose_name=_("Breed"))
     status = models.CharField(
-        max_length=6, choices=PetStatusChoices.choices, verbose_name="Situação"
+        max_length=6, choices=PetStatusChoices.choices, verbose_name=_("Status")
     )
-    image = models.ImageField(upload_to="posts/", default="", verbose_name="Imagem")
+    image = models.ImageField(
+        upload_to="posts/%Y/%m/%d/", default="", verbose_name=_("Image")
+    )
     last_local = models.ForeignKey(
         Local,
         on_delete=models.SET_NULL,
         related_name="pets",
         null=True,
         blank=True,
-        verbose_name="Última localização",
+        verbose_name="Last Location",
     )
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Tutor")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Owner"))
 
     def __str__(self) -> str:
         return f"{self.name}, 'last_local':{self.last_local}"
 
 
 class Post(BaseModel):
-    description = models.CharField(max_length=280, verbose_name="Descrição")
-    title = models.CharField(max_length=50, verbose_name="Titulo")
+    description = models.CharField(max_length=280, verbose_name=_("Description"))
+    title = models.CharField(max_length=50, verbose_name=_("Title"))
     is_published = models.BooleanField(default=True)
     reward = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Recompensa",
+        verbose_name=_("Reward"),
     )
     slug = models.SlugField(max_length=100, blank=True, null=True)
     pet = models.ForeignKey(Pet, on_delete=models.CASCADE)

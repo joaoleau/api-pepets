@@ -7,7 +7,7 @@ from .permissions import IsAuthorOrIsAuthenticatedReadOnly
 from rest_framework.permissions import (
     IsAuthenticated,
 )
-from .models import Post
+from ..models import Post
 from .serializers import PostListSerializer, PostCreateSerializer, PostDetailSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,14 +26,19 @@ class PostPagination(pagination.PageNumberPagination):
 class PostUserListView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
+    queryset = Post.objects.published()
 
     def get_queryset(self):
-        return Post.objects.filter(pet__owner__slug=self.kwargs["slug"])
+        return self.queryset.filter(pet__owner__slug=self.kwargs.get("slug"))
+
+    def get(self, request, slug, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class PostMeView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
+    queryset = Post.objects.published()
 
     def get_queryset(self):
         return Post.objects.filter(pet__owner__slug=self.request.user.slug)
