@@ -16,9 +16,6 @@ from rest_framework import pagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-PostQuerySet = Post.objects.published()
-
-
 class PostPagination(pagination.PageNumberPagination):
     page_size = 25
 
@@ -29,7 +26,9 @@ class PostUserListView(ListAPIView):
     queryset = Post.objects.published()
 
     def get_queryset(self):
-        return self.queryset.filter(pet__owner__slug=self.kwargs.get("slug"))
+        qs = self.queryset.filter(pet__owner__slug=self.kwargs.get("slug"))
+        qs = qs.select_related("pet__last_local", "pet__owner")
+        return qs
 
     def get(self, request, slug, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -47,7 +46,7 @@ class PostMeView(ListAPIView):
 class PostCreateView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostCreateSerializer
-    queryset = PostQuerySet
+    queryset = Post.objects.published()
 
     def post(self, request, *args, **kwargs):
         request.data["pet"]["owner"] = request.user.id
@@ -66,13 +65,13 @@ class PostCreateView(CreateAPIView):
 class PostDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
     serializer_class = PostDetailSerializer
-    queryset = PostQuerySet
+    queryset = Post.objects.published()
     lookup_field = "slug"
 
 
 class PostListView(ListAPIView):
     serializer_class = PostListSerializer
-    queryset = PostQuerySet
+    queryset = Post
     pagination_class = PostPagination
     filter_backends = [
         DjangoFilterBackend,
@@ -95,3 +94,9 @@ class PostListView(ListAPIView):
 
     def paginate_queryset(self, queryset):
         return super().paginate_queryset(queryset)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.objects.published()
+        qs = qs.select_related("pet", "pet__last_local", "pet__owner")
+        return qs

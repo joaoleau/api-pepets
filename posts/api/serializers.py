@@ -34,7 +34,7 @@ class PetDetailSerializer(serializers.ModelSerializer):
         model = Pet
         fields = "__all__"
         read_only_fields = ("owner",)
-    
+
     def validate(self, attrs):
         for field, value in attrs.items():
             if field != "last_local" and field != "owner":
@@ -98,7 +98,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-    
+
     def validate(self, attrs):
         for field, value in attrs.items():
             if field != "pet":

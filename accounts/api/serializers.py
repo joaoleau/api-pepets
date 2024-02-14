@@ -60,8 +60,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 
 class PasswordResetSerializer(serializers.Serializer):
-    email = serializers.CharField(
-        write_only=True, style={"input_type": "email"})
+    email = serializers.CharField(write_only=True, style={"input_type": "email"})
 
 
 class RegisterSerializer(serializers.Serializer):

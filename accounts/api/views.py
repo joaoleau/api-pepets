@@ -23,7 +23,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     LoginSerializer,
     UserMeSerializer,
-    UserAdminListSerializer
+    UserAdminListSerializer,
 )
 from ..validators import equal_password_and_re_password_validator
 
@@ -75,6 +75,11 @@ class UsersListView(ListAPIView):
     serializer_class = UserAdminListSerializer
     queryset = User
     permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.prefetch_related("groups", "user_permissions")
+        return qs
 
 
 class PasswordResetConfirmView(CreateAPIView):
