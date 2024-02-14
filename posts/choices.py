@@ -1,11 +1,12 @@
 from django.db import models
 
 
-class PostStatusChoices(models.TextChoices):
+class PetStatusChoices(models.TextChoices):
     LOST = "Lost", "lost"
     FOUND = "Found", "found"
 
 
-class PostGenreChoices(models.TextChoices):
+class PetGenderChoices(models.TextChoices):
     FEMALE = "Female", "female"
     MALE = "Male", "male"
+    UNKNOWN = "Unknown", "unknown"

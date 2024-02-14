@@ -1,6 +1,14 @@
-from django.urls import reverse
-from django.conf import settings
+import collections
 
 
-def generate_link_post_detail(post_id) -> dict:
-    return f"{settings.MY_HOST}{reverse(viewname='posts:rest_post_detail', kwargs={'pk':post_id})}"
+def cleaned_data(value):
+
+    if not isinstance(value, str):
+        return
+    if isinstance(value, collections.OrderedDict):
+        return
+
+    value = value.strip()
+    value = " ".join(value.split())
+    value = value.capitalize()
+    return value

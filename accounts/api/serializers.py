@@ -1,20 +1,41 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from ..utils import generate_link_account_detail
+from django.urls import reverse
+from django.conf import settings
+from ..validators import name_validator, password_validator
 
 User = get_user_model()
 
 
-class AccountsListSerializer(serializers.ModelSerializer):
+class UserAdminListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        exclude = ("password",)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data["object_link"] = generate_link_account_detail(slug=instance.slug)
+        data["object_url"] = self.generate_url_user_detail(slug=instance.slug)
         return data
+
+    def generate_url_user_detail(self, slug) -> dict:
+        return f"{settings.MY_HOST}{reverse(viewname='rest_user_detail', kwargs={'slug':slug})}"
+
+
+class UserMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "email", "phone")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["change_password"] = self.generate_url_user_change_password(
+            code=instance.code
+        )
+        return data
+
+    def generate_url_user_change_password(self, code) -> dict:
+        return f"{settings.MY_HOST}{reverse(viewname='rest_reset_password', kwargs={'uuid':code})}"
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -23,44 +44,56 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = ("first_name", "last_name", "email", "phone")
 
 
-class CodeSerializer(serializers.Serializer):
-    email = serializers.CharField(write_only=True, required=True)
-    code = serializers.CharField(write_only=True, required=True)
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        validators=[password_validator],
+    )
+    re_new_password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        validators=[password_validator],
+    )
 
 
 class PasswordResetSerializer(serializers.Serializer):
-    new_password1 = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
-    )
-    new_password2 = serializers.CharField(
-        write_only=True, style={"input_type": "password"}
-    )
-
-
-class EmailPasswordResetSerializer(serializers.Serializer):
     email = serializers.CharField(write_only=True, style={"input_type": "email"})
 
 
 class RegisterSerializer(serializers.Serializer):
     username = None
-    first_name = serializers.CharField(max_length=100, required=True)
-    last_name = serializers.CharField(max_length=100, required=True)
+    first_name = serializers.CharField(
+        max_length=100, required=True, validators=[name_validator]
+    )
+    last_name = serializers.CharField(
+        max_length=100, required=True, validators=[name_validator]
+    )
     email = serializers.EmailField(max_length=100, required=True)
-    password1 = serializers.CharField(write_only=True, style={"input_type": "password"})
-    password2 = serializers.CharField(write_only=True, style={"input_type": "password"})
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        validators=[password_validator],
+    )
+    re_password = serializers.CharField(
+        write_only=True, style={"input_type": "password"}, required=True
+    )
 
     def create(self, validated_data):
-        password = validated_data.pop("password1")
+        password = validated_data.pop("password")
         email = validated_data.pop("email")
         first_name = validated_data.pop("first_name")
         last_name = validated_data.pop("last_name")
-        validated_data.pop("password2")
+        validated_data.pop("re_password")
         user = User.objects.create_user(
             password=password,
             email=email,
             first_name=first_name,
             last_name=last_name,
-            **validated_data
+            **validated_data,
         )
         return user
 

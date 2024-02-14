@@ -1,49 +1,47 @@
 from django.urls import path
-from posts.views import AccountPostsListView
 from .views import (
     RegisterView,
     LoginView,
+    PasswordResetConfirmView,
+    EmailVerifyView,
     PasswordResetView,
-    CodeVerifyView,
-    EmailPasswordResetView,
     TokenVerifyView,
     TokenRefreshView,
-    AccountsDetailsView,
-    AccountsListView,
+    UserDetailView,
+    UsersListView,
+    UserMeView,
 )
 
-
+# Rotas Usuário
 urlpatterns = [
-    path("accounts/", AccountsListView.as_view(), name="rest_accounts_list"),
-    path("accounts/<str:slug>/", AccountsDetailsView.as_view(), name="rest_account_detail"),
-]
-
-
-urlpatterns += [
-    path("verify/", CodeVerifyView.as_view(), name="rest_account_verify"),
-    path("register/", RegisterView.as_view(), name="rest_account_register"),
+    path("register/", RegisterView.as_view(), name="rest_user_register"),
+    path("verify/<uuid:uuid>/", EmailVerifyView.as_view(), name="rest_user_verify"),
+    path("me/", UserMeView.as_view(), name="rest_user_me"),
     path(
         "reset/password/",
-        EmailPasswordResetView.as_view(),
+        PasswordResetView.as_view(),
         name="rest_email_reset_password",
     ),
     path(
-        "reset/password/confirm/<str:slug>/<str:code>/",
-        PasswordResetView.as_view(),
+        "reset/password/confirm/<uuid:uuid>/",
+        PasswordResetConfirmView.as_view(),
         name="rest_reset_password",
     ),
 ]
 
-
+# Rotas SimpleJWT
 urlpatterns += [
     path("login/", LoginView.as_view(), name="rest_login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="rest_token_refresh"),
     path("token/verify/", TokenVerifyView.as_view(), name="rest_token_verify"),
 ]
 
-
+# Rotas Administrativas
 urlpatterns += [
+    path("admin-api/users/", UsersListView.as_view(), name="rest_users_list"),
     path(
-        "<str:slug>/posts/", AccountPostsListView.as_view(), name="rest_account_posts"
+        "admin-api/users/<str:slug>/",
+        UserDetailView.as_view(),
+        name="rest_user_detail",
     ),
 ]
