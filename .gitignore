@@ -5,3 +5,6 @@
 db.sqlite3
 *.yml
 .ruff_cache
+*.png
+*.jpg
+*.jpeg

@@ -23,7 +23,7 @@ class PetListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pet
-        fields = ["owner", "last_local", "name", "image", "status", "description"]
+        fields = ["owner", "last_local", "name", "status", "description"]
 
 
 class PetDetailSerializer(serializers.ModelSerializer):
@@ -33,7 +33,7 @@ class PetDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pet
         fields = "__all__"
-        read_only_fields = ("owner",)
+        read_only_fields = ("owner", "slug",)
 
     def validate(self, attrs):
         for field, value in attrs.items():
@@ -81,6 +81,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         pet = validated_data.pop("pet", None)
+
         if pet:
             local = pet.pop("last_local", None)
 
@@ -118,7 +119,8 @@ class PostCreateSerializer(serializers.ModelSerializer):
         local = pet.pop("last_local")
         local = Local.objects.create(**local)
         pet = Pet.objects.create(last_local=local, **pet)
-        instance = self.Meta.model.objects.create(pet=pet, **validated_data)
+        instance = self.Meta.model.objects.create(
+            pet=pet,**validated_data)
         return instance
 
     def validate(self, attrs):

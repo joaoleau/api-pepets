@@ -49,6 +49,10 @@ class PostCreateView(CreateAPIView):
     queryset = Post.objects.published()
 
     def post(self, request, *args, **kwargs):
+
+        if request.user.is_staff and request.data["pet"].get("owner", None) is not None:
+            return self.create(request, *args, **kwargs)
+
         request.data["pet"]["owner"] = request.user.id
         return self.create(request, *args, **kwargs)
 
@@ -63,10 +67,25 @@ class PostCreateView(CreateAPIView):
 
 
 class PostDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
+    # permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
     serializer_class = PostDetailSerializer
     queryset = Post.objects.published()
     lookup_field = "slug"
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs.setdefault('context', self.get_serializer_context())
+        return serializer_class(*args, **kwargs)
 
 
 class PostListView(ListAPIView):

@@ -42,6 +42,7 @@ class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("first_name", "last_name", "email", "phone")
+        read_only_fields = ("first_name", "last_name", "email", "phone")
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

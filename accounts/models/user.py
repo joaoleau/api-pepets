@@ -41,7 +41,7 @@ class User(AbstractUser):
             "Unselect this instead of deleting accounts."
         ),
     )
-    _code = models.UUIDField(default=uuid.uuid4(), editable=False)
+    _code = models.UUIDField(editable=False, default=None)
     username = None
 
     objects = UserManager()
@@ -50,6 +50,8 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["phone", "first_name", "last_name"]
 
     def save(self, *args, **kwargs):
+        if not self._code:
+            self.code = uuid.uuid4()
         if not self.slug:
             self.slug = slugify(
                 f'{self.first_name}{"".join(random.choice(string.digits) for _ in range(4))}'

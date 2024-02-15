@@ -4,9 +4,9 @@ import collections
 def cleaned_data(value):
 
     if not isinstance(value, str):
-        return
+        return value
     if isinstance(value, collections.OrderedDict):
-        return
+        return value
 
     value = value.strip()
     value = " ".join(value.split())

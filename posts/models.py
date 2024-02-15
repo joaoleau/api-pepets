@@ -43,9 +43,6 @@ class Pet(models.Model):
     status = models.CharField(
         max_length=6, choices=PetStatusChoices.choices, verbose_name=_("Status")
     )
-    image = models.ImageField(
-        upload_to="posts/%Y/%m/%d/", default="", verbose_name=_("Image")
-    )
     last_local = models.ForeignKey(
         Local,
         on_delete=models.SET_NULL,
@@ -64,6 +61,9 @@ class Post(BaseModel):
     description = models.CharField(max_length=280, verbose_name=_("Description"))
     title = models.CharField(max_length=50, verbose_name=_("Title"))
     is_published = models.BooleanField(default=True)
+    image = models.ImageField(
+        upload_to="postsImages/%Y/%m/%d/", verbose_name=_("Image"), default=""
+    )
     reward = models.DecimalField(
         max_digits=10,
         decimal_places=2,
