@@ -59,6 +59,9 @@ Esta aplicação web tem como objetivo facilitar a conexão entre pessoas que pe
   pip install -r requirements.txt
 ```
 
+### Configure as variaveis de ambiente
+Faça os devidos ajustes no arquivo ".env-example" e depois altere seu nome para ".env"
+
 ### Faça as migrações
 
 ```bash
