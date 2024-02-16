@@ -77,7 +77,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        exclude = ["id", "created_at", "updated_at"]
+        exclude = ["id", "created_at", "updated_at",]
 
     def update(self, instance, validated_data):
         pet = validated_data.pop("pet", None)
@@ -112,7 +112,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        exclude = ["id", "created_at", "updated_at", "slug"]
+        exclude = ["id", "created_at", "updated_at", "slug", "is_published",]
 
     def create(self, validated_data):
         pet = validated_data.pop("pet")

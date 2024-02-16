@@ -52,8 +52,7 @@ class PostCreateView(CreateAPIView):
 
         if request.user.is_staff and request.data["pet"].get("owner", None) is not None:
             return self.create(request, *args, **kwargs)
-
-        request.data["pet"]["owner"] = request.user.id
+        request.data["pet"].update({"owner": request.user.id})
         return self.create(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
@@ -67,7 +66,7 @@ class PostCreateView(CreateAPIView):
 
 
 class PostDetailView(RetrieveUpdateDestroyAPIView):
-    # permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
+    permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
     serializer_class = PostDetailSerializer
     queryset = Post.objects.published()
     lookup_field = "slug"

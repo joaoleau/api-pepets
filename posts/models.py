@@ -49,9 +49,9 @@ class Pet(models.Model):
         related_name="pets",
         null=True,
         blank=True,
-        verbose_name="Last Location",
+        verbose_name=_("Last Location"),
     )
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Owner"))
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Owner"), related_name="pet")
 
     def __str__(self) -> str:
         return f"{self.name}, 'last_local':{self.last_local}"
@@ -62,7 +62,7 @@ class Post(BaseModel):
     title = models.CharField(max_length=50, verbose_name=_("Title"))
     is_published = models.BooleanField(default=True)
     image = models.ImageField(
-        upload_to="postsImages/%Y/%m/%d/", verbose_name=_("Image"), default=""
+        upload_to="posts/%m/%d/", verbose_name=_("Image"), default=""
     )
     reward = models.DecimalField(
         max_digits=10,
@@ -72,7 +72,7 @@ class Post(BaseModel):
         verbose_name=_("Reward"),
     )
     slug = models.SlugField(max_length=100, blank=True, null=True)
-    pet = models.ForeignKey(Pet, on_delete=models.CASCADE)
+    pet = models.OneToOneField(Pet, on_delete=models.CASCADE, related_name='post')
 
     objects = PostManager()
 
