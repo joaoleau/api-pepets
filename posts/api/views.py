@@ -72,10 +72,9 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
     lookup_field = "slug"
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
         self.perform_update(serializer)
@@ -83,7 +82,7 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()
-        kwargs.setdefault('context', self.get_serializer_context())
+        kwargs.setdefault("context", self.get_serializer_context())
         return serializer_class(*args, **kwargs)
 
 

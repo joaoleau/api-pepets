@@ -33,7 +33,10 @@ class PetDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pet
         fields = "__all__"
-        read_only_fields = ("owner", "slug",)
+        read_only_fields = (
+            "owner",
+            "slug",
+        )
 
     def validate(self, attrs):
         for field, value in attrs.items():
@@ -77,7 +80,17 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        exclude = ["id", "created_at", "updated_at",]
+        exclude = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+
+    def update_image(self, instance, new_image):
+        if instance.image:
+            instance.remove_image()
+        instance.image = new_image
+        instance.save()
 
     def update(self, instance, validated_data):
         pet = validated_data.pop("pet", None)
@@ -93,6 +106,9 @@ class PostDetailSerializer(serializers.ModelSerializer):
             for attr, value in pet.items():
                 setattr(instance.pet, attr, value)
             instance.pet.save()
+
+        if validated_data.get("image", None):
+            self.update_image(instance, validated_data.pop("image"))
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -112,15 +128,20 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        exclude = ["id", "created_at", "updated_at", "slug", "is_published",]
+        exclude = [
+            "id",
+            "created_at",
+            "updated_at",
+            "slug",
+            "is_published",
+        ]
 
     def create(self, validated_data):
         pet = validated_data.pop("pet")
         local = pet.pop("last_local")
         local = Local.objects.create(**local)
         pet = Pet.objects.create(last_local=local, **pet)
-        instance = self.Meta.model.objects.create(
-            pet=pet,**validated_data)
+        instance = self.Meta.model.objects.create(pet=pet, **validated_data)
         return instance
 
     def validate(self, attrs):
