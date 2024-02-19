@@ -1,13 +1,20 @@
 from rest_framework.generics import (
     ListAPIView,
     CreateAPIView,
+    GenericAPIView,
     RetrieveUpdateDestroyAPIView,
+)
+from rest_framework.mixins import (
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+    UpdateModelMixin,
 )
 from .permissions import IsAuthorOrIsAuthenticatedReadOnly
 from rest_framework.permissions import (
     IsAuthenticated,
 )
-from ..models import Post
+from ..models import Post, Comments
 from .serializers import PostListSerializer, PostCreateSerializer, PostDetailSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -117,3 +124,16 @@ class PostListView(ListAPIView):
         qs = qs.objects.published()
         qs = qs.select_related("pet", "pet__last_local", "pet__owner")
         return qs
+
+
+class CommentsView():
+    queryset = Comments.objects.all()
+    permission_classes = [IsAuthorOrIsAuthenticatedReadOnly]
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+
+class CommentsCreateView(CreateAPIView):
+    queryset = Comments.objects.all()
+    permission_classes = [IsAuthenticated]

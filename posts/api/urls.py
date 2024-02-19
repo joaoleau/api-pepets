@@ -5,6 +5,7 @@ from .views import (
     PostCreateView,
     PostMeView,
     PostUserListView,
+    CommentsView
 )
 
 app_name = "posts"
@@ -14,6 +15,7 @@ urlpatterns = [
     path("posts/", PostListView.as_view(), name="rest_posts_list"),
     path("me/posts/create/", PostCreateView.as_view(), name="rest_posts_create"),
     path("me/posts/", PostMeView.as_view(), name="rest_posts_me"),
+    path("comments/<pk:pk>/", CommentsView.as_view(), name="posts:rest_comments_detail")
 ]
 
 urlpatterns += [

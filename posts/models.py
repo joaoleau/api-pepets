@@ -141,3 +141,15 @@ class Post(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.title}, {self.pet}"
+
+
+class Comments(BaseModel):
+    author = models.ForeignKey(
+        User,
+        verbose_name=_("Author"),
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+    post = models.ForeignKey(
+        Post, verbose_name=_("Post"), on_delete=models.CASCADE, related_name="comments"
+    )

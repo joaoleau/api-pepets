@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from accounts.api.serializers import AccountSerializer
-from ..models import Post, Local, Pet
+from ..models import Post, Local, Pet, Comments
 from django.urls import reverse
 from django.conf import settings
 from ..utils import cleaned_data
@@ -149,3 +149,17 @@ class PostCreateSerializer(serializers.ModelSerializer):
             if field != "pet":
                 attrs[field] = cleaned_data(value)
         return super().validate(attrs)
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comments
+        exclude = ["id",]
+    
+    def generate_url_comments_detail(self, id):
+        return f"{settings.MY_HOST}{reverse(viewname='posts:rest_comments_detail', kwargs={'id':id})}"
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["object_url"] = self.generate_url_comments_detail(id=instance.id)
+        return data
