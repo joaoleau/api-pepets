@@ -48,7 +48,12 @@ Esta aplicação web tem como objetivo facilitar a conexão entre pessoas que pe
   venv\Scripts\activate
 ```
 
-- No Unix ou MacOS:
+- No Git Bash
+```bash
+  source venv\Scripts\activate
+```
+
+- No Linux
 ```bash
   source venv/bin/activate
 ```
