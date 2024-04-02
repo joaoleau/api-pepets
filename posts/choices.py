@@ -10,3 +10,10 @@ class PetGenderChoices(models.TextChoices):
     FEMALE = "Female", "female"
     MALE = "Male", "male"
     UNKNOWN = "Unknown", "unknown"
+
+
+class PetChoices(models.TextChoices):
+    DOG = "Dog", "dog"
+    CAT = "Cat", "cat"
+    BIRD = "Bird", "bird"
+    OTHERS = "Others", "others"
