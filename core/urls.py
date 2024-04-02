@@ -10,8 +10,8 @@ app_name = "core"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("accounts.api.urls")),
-    path("", include("posts.api.urls")),
+    path("user/", include("accounts.api.urls")),
+    path("pets/", include("posts.api.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
