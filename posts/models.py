@@ -1,10 +1,13 @@
 from django.db import models
 from accounts.models import User
-from .choices import PetGenderChoices, PetStatusChoices
-from .managers import PostManager
+from .choices import PetGenderChoices, PetStatusChoices, PetChoices
+from .managers import PetsManager
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.conf import settings
+from django.urls import reverse
 from PIL import Image
 import string
 import posixpath
@@ -33,26 +36,14 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class Local(models.Model):
-    street = models.CharField(max_length=100, verbose_name=_("Street"))
-    neighborhood = models.CharField(max_length=100, verbose_name=_("Neighborhood"))
-    city = models.CharField(max_length=100, verbose_name=_("City"))
+class Pet(BaseModel):
 
-    def __str__(self) -> str:
-        return f"{self.street}, {self.neighborhood}, {self.city}"
+    objects = PetsManager()
 
-
-class Pet(models.Model):
-    class PetType(models.TextChoices):
-        DOG = "Dog", "dog"
-        CAT = "Cat", "cat"
-        BIRD = "Bird", "bird"
-        OTHERS = "Others", "others"
-
-    name = models.CharField(max_length=10, verbose_name=_("Pet Name"))
+    name = models.CharField(max_length=20, verbose_name=_("Pet Name"))
     description = models.CharField(max_length=280, verbose_name=_("Pet Description"))
     type = models.CharField(
-        max_length=6, choices=PetType.choices, verbose_name=_("Pet Type")
+        max_length=6, choices=PetChoices.choices, verbose_name=_("Pet Type")
     )
     gender = models.CharField(
         max_length=7, choices=PetGenderChoices.choices, verbose_name=_("Gender")
@@ -61,26 +52,9 @@ class Pet(models.Model):
     status = models.CharField(
         max_length=6, choices=PetStatusChoices.choices, verbose_name=_("Status")
     )
-    last_local = models.ForeignKey(
-        Local,
-        on_delete=models.SET_NULL,
-        related_name="pets",
-        null=True,
-        blank=True,
-        verbose_name=_("Last Location"),
-    )
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name=_("Owner"), related_name="pet"
     )
-
-    def __str__(self) -> str:
-        return f"{self.name}, 'last_local':{self.last_local}"
-
-
-class Post(BaseModel):
-    description = models.CharField(max_length=280, verbose_name=_("Description"))
-    title = models.CharField(max_length=50, verbose_name=_("Title"))
-    is_published = models.BooleanField(default=True)
     image = ImageField(upload_to="posts-images/", verbose_name=_("Image"), default="")
     reward = models.DecimalField(
         max_digits=10,
@@ -89,10 +63,14 @@ class Post(BaseModel):
         blank=True,
         verbose_name=_("Reward"),
     )
-    slug = models.SlugField(max_length=100, blank=True, null=True)
-    pet = models.OneToOneField(Pet, on_delete=models.CASCADE, related_name="post")
+    slug = models.SlugField(unique=True, blank=True)
+    is_published = models.BooleanField(default=True)
 
-    objects = PostManager()
+    def __str__(self) -> str:
+        return f"{self.name}, 'last_local':{self.local}"
+
+    def get_absolute_url(self):
+        return reverse("pets:api-pets-detail", kwargs={"slug": self.slug})
 
     def image_path(self):
         return os.path.join(settings.MEDIA_ROOT, self.image.name)
@@ -122,7 +100,7 @@ class Post(BaseModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(
-                f'{self.pet.name}{"".join(random.choice(string.digits) for _ in range(4))}'
+                f'{self.name}{"".join(random.choice(string.digits) for _ in range(4))}'
             )
 
         super().save(*args, **kwargs)
@@ -135,9 +113,23 @@ class Post(BaseModel):
         self.remove_image()
         return super().delete(using, keep_parents)
 
-    class Meta:
-        verbose_name = "Post"
-        verbose_name_plural = "Posts"
+
+class Local(models.Model):
+    pet = models.OneToOneField(
+        Pet,
+        on_delete=models.CASCADE,
+        related_name="local",
+        verbose_name=_("Last Location"),
+    )
+    street = models.CharField(max_length=100, verbose_name=_("Street"))
+    neighborhood = models.CharField(max_length=100, verbose_name=_("Neighborhood"))
+    city = models.CharField(max_length=100, verbose_name=_("City"))
 
     def __str__(self) -> str:
-        return f"{self.title}, {self.pet}"
+        return f"{self.street}, {self.neighborhood}, {self.city}"
+
+
+@receiver(post_save, sender=Pet)
+def create_default_subscription(sender, instance, created, **kwargs):
+    if created:
+        Local.objects.create(pet=instance)
