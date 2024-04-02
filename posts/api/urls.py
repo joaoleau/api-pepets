@@ -1,21 +1,25 @@
 from django.urls import path
 from .views import (
-    PostDetailView,
-    PostListView,
-    PostCreateView,
-    PostMeView,
-    PostUserListView,
+    PetDetailView,
+    PetListView,
+    PetCreateView,
+    MePetsView,
+    LastLocalUpdateView,
 )
 
-app_name = "posts"
+app_name = "pets"
 
 urlpatterns = [
-    path("posts/<str:slug>/", PostDetailView.as_view(), name="rest_posts_detail"),
-    path("posts/", PostListView.as_view(), name="rest_posts_list"),
-    path("me/posts/create/", PostCreateView.as_view(), name="rest_posts_create"),
-    path("me/posts/", PostMeView.as_view(), name="rest_posts_me"),
+    path("create/", PetCreateView.as_view(), name="api-pets-create"),
+    path("", PetListView.as_view(), name="api-pets-list"),
+    path("me/", MePetsView.as_view(), name="api-me-pets"),
+    path("<slug:slug>/", PetDetailView.as_view(), name="api-pets-detail"),
 ]
 
 urlpatterns += [
-    path("<str:slug>/posts/", PostUserListView.as_view(), name="rest_user_posts"),
+    path(
+        "<slug:slug>/lastlocal/",
+        LastLocalUpdateView.as_view(),
+        name="api-pets-lastlocal-update",
+    ),
 ]
