@@ -5,6 +5,7 @@ from accounts.api.token import user_tokenizer_generate
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.db import IntegrityError
 from accounts.validators import equal_password_and_re_password_validator_or_400
 from rest_framework import status
 from rest_framework import permissions
@@ -37,16 +38,19 @@ class RegisterView(CreateAPIView):
     queryset = User.objects.all()
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = self.perform_create(serializer)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = self.perform_create(serializer)
 
-        self.send_verification_code(user, get_current_site(request))
+            self.send_verification_code(user, get_current_site(request))
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            )
+        except IntegrityError:
+            return Response(data={"error":"Email address already in use."}, status=status.HTTP_400_BAD_REQUEST) 
 
     def send_verification_code(self, user, current_site):
         subject = "Activate your account"
