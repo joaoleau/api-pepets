@@ -50,7 +50,10 @@ class RegisterView(CreateAPIView):
                 serializer.data, status=status.HTTP_201_CREATED, headers=headers
             )
         except IntegrityError:
-            return Response(data={"error":"Email address already in use."}, status=status.HTTP_400_BAD_REQUEST) 
+            return Response(
+                data={"error": "Email address already in use."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def send_verification_code(self, user, current_site):
         subject = "Activate your account"
