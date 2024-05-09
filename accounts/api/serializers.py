@@ -1,25 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.urls import reverse
-from django.conf import settings
-from ..validators import name_validator, password_validator
+from accounts.validators import name_validator, password_validator
 
 User = get_user_model()
-
-
-class UserAdminListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        exclude = ("password",)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["object_url"] = self.generate_url_user_detail(slug=instance.slug)
-        return data
-
-    def generate_url_user_detail(self, slug) -> dict:
-        return f"{settings.MY_HOST}{reverse(viewname='rest_user_detail', kwargs={'slug':slug})}"
 
 
 class UserMeSerializer(serializers.ModelSerializer):
@@ -27,22 +11,12 @@ class UserMeSerializer(serializers.ModelSerializer):
         model = User
         fields = ("first_name", "last_name", "email", "phone")
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["change_password"] = self.generate_url_user_change_password(
-            code=instance.code
-        )
-        return data
-
-    def generate_url_user_change_password(self, code) -> dict:
-        return f"{settings.MY_HOST}{reverse(viewname='rest_reset_password', kwargs={'uuid':code})}"
-
 
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "email", "phone")
-        read_only_fields = ("first_name", "last_name", "email", "phone")
+        fields = ("first_name", "last_name", "email", "phone", "id")
+        read_only_fields = ("first_name", "last_name", "email", "phone", "id")
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
@@ -132,3 +106,9 @@ class LoginSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token["email"] = user.email
         return token
+
+
+class UserAdminListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = "password"
