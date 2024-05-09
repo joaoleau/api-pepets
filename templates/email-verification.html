@@ -1,0 +1,19 @@
+
+{% autoescape off %}
+
+Olá,
+
+Por favor, verifique sua conta clicando no link abaixo:
+
+http://{{ domain }}{% url 'rest_email_verification' uidb64=uid token=token %}
+
+Obrigado por escolher o Pepets, o site de busca e publicação de pets perdidos.
+
+{% endautoescape %}
+
+
+
+
+
+
+
