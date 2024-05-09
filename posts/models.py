@@ -75,6 +75,12 @@ class Pet(BaseModel):
     def image_path(self):
         return os.path.join(settings.MEDIA_ROOT, self.image.name)
 
+    def update_image(self, new_image):
+        if self.image:
+            self.remove_image()
+        self.image = new_image
+        self.save()
+
     def remove_image(self):
         if self.image:
             image_path = self.image_path()
@@ -97,7 +103,11 @@ class Pet(BaseModel):
         new_img = img_pil.resize((new_width, new_height), Image.LANCZOS)
         new_img.save(img_full_path, optimize=True, quality=50)
 
-    def save(self, *args, **kwargs):
+    def save(
+        self,
+        *args,
+        **kwargs,
+    ):
         if not self.slug:
             self.slug = slugify(
                 f'{self.name}{"".join(random.choice(string.digits) for _ in range(4))}'
