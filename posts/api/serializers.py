@@ -19,14 +19,12 @@ class LocalSerializer(serializers.ModelSerializer):
 
 
 class PetListSerializer(serializers.ModelSerializer):
-    owner = AccountSerializer(read_only=True)
     lastlocal = LocalSerializer(source="local", read_only=True)
     absolute_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Pet
-        fields = "__all__"
-        read_only_fields = ["updated_at", "created_at", "slug", "id"]
+        fields = ("name", "created_at", "reward", "image", "lastlocal", "absolute_url")
 
     def get_absolute_url(self, obj):
         request = self.context.get("request")
@@ -43,19 +41,57 @@ class PetDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ["id", "created_at", "updated_at", "slug"]
 
-    def update_image(self, instance, new_image):
-        if instance.image:
-            instance.remove_image()
-        instance.image = new_image
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            if attr == "image":
+                instance.remove_image()
+            setattr(instance, attr, value)
+
         instance.save()
+
+        return instance
 
     def validate(self, attrs):
         for field, value in attrs.items():
             attrs[field] = cleaned_data(value)
         return super().validate(attrs)
 
+    def validate_name(self, value):
+        if not value.isalpha():
+            raise serializers.ValidationError("The name must contain only letters.")
+        return value
+
 
 class PetCreateSerializer(serializers.ModelSerializer):
+    absolute_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Pet
-        fields = ["name", "description", "gender", "type", "breed", "reward", "image"]
+        fields = [
+            "name",
+            "description",
+            "gender",
+            "type",
+            "breed",
+            "reward",
+            "image",
+            "status",
+            "slug",
+            "created_at",
+            "updated_at",
+            "absolute_url",
+        ]
+        extra_kwargs = {
+            "image": {"required": False},
+        }
+        read_only_fields = ["id", "created_at", "updated_at", "slug"]
+
+    def get_absolute_url(self, obj):
+        request = self.context.get("request")
+        if request is not None:
+            return request.build_absolute_uri(obj.get_absolute_url())
+
+    def validate_name(self, value):
+        if not value.isalpha():
+            raise serializers.ValidationError("The name must contain only letters.")
+        return value
