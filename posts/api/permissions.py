@@ -9,11 +9,6 @@ class IsAuthorOrIsAuthenticatedReadOnly(BasePermission):
         )
 
 
-class IsAuthorObj(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.owner == request.user and request.user.is_authenticated
-
-
 class IsAuthorView(BasePermission):
 
     def has_permission(self, request, view):
