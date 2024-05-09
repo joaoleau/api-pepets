@@ -2,9 +2,9 @@ from django.urls import path
 from .views import (
     RegisterView,
     LoginView,
+    PasswordResetView,
     PasswordResetConfirmView,
     EmailVerifyView,
-    PasswordResetView,
     TokenVerifyView,
     TokenRefreshView,
     UserDetailView,
@@ -15,7 +15,11 @@ from .views import (
 # Rotas Usuário
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="rest_user_register"),
-    path("verify/<uuid:uuid>/", EmailVerifyView.as_view(), name="rest_user_verify"),
+    path(
+        "email/verification/<str:uidb64>/<str:token>/",
+        EmailVerifyView.as_view(),
+        name="rest_email_verification",
+    ),
     path("me/", UserMeView.as_view(), name="rest_user_me"),
     path(
         "reset/password/",
@@ -23,9 +27,9 @@ urlpatterns = [
         name="rest_email_reset_password",
     ),
     path(
-        "reset/password/confirm/<uuid:uuid>/",
+        "reset/password/confirm/<str:uidb64>/<str:token>/",
         PasswordResetConfirmView.as_view(),
-        name="rest_reset_password",
+        name="rest_password_reset_confirm",
     ),
 ]
 
@@ -38,9 +42,9 @@ urlpatterns += [
 
 # Rotas Administrativas
 urlpatterns += [
-    path("admin-api/users/", UsersListView.as_view(), name="rest_users_list"),
+    path("admin/users/", UsersListView.as_view(), name="rest_users_list"),
     path(
-        "admin-api/users/<str:slug>/",
+        "admin/users/<int:pk>/",
         UserDetailView.as_view(),
         name="rest_user_detail",
     ),
