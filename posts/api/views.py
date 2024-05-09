@@ -74,7 +74,6 @@ class PetListView(ListAPIView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.objects.published()
         qs = qs.select_related("local", "owner")
         return qs
 
