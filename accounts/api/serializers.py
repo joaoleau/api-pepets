@@ -111,4 +111,4 @@ class LoginSerializer(TokenObtainPairSerializer):
 class UserAdminListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = "password"
+        exclude = ("password",)
