@@ -172,13 +172,13 @@ class UserMeView(RetrieveUpdateDestroyAPIView):
 
 class UserDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserAdminListSerializer
-    queryset = User
+    queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
 
 class UsersListView(ListAPIView):
     serializer_class = UserAdminListSerializer
-    queryset = User
+    queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
