@@ -5,7 +5,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework import mixins
-from .permissions import IsAuthorOrIsAuthenticatedReadOnly, IsAuthorView
+from .permissions import IsAuthorOrIsAuthenticatedReadOnly, IsAuthorObject
 from rest_framework.permissions import (
     IsAuthenticated,
 )
@@ -19,6 +19,7 @@ from .serializers import (
 from rest_framework import filters
 from rest_framework import pagination
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 
 
 class PostPagination(pagination.PageNumberPagination):
@@ -79,8 +80,7 @@ class PetListView(ListAPIView):
 
 
 class LastLocalUpdateView(mixins.UpdateModelMixin, GenericAPIView):
-    permission_classes = [IsAuthorView]
-    model = Local
+    permission_classes = [IsAuthorObject]
     serializer_class = LocalSerializer
 
     def put(self, request, *args, **kwargs):
@@ -90,4 +90,6 @@ class LastLocalUpdateView(mixins.UpdateModelMixin, GenericAPIView):
         return self.partial_update(request, *args, **kwargs)
 
     def get_object(self):
-        return Local.objects.get(pet__slug=self.kwargs.get("slug"))
+        obj = get_object_or_404(Local.objects.all(), pet__slug=self.kwargs.get("slug"))
+        self.check_object_permissions(self.request, obj)
+        return obj
