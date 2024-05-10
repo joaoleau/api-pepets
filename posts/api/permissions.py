@@ -1,5 +1,4 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from posts.models import Pet
 
 
 class IsAuthorOrIsAuthenticatedReadOnly(BasePermission):
@@ -9,14 +8,7 @@ class IsAuthorOrIsAuthenticatedReadOnly(BasePermission):
         )
 
 
-class IsAuthorView(BasePermission):
+class IsAuthorObject(BasePermission):
 
-    def has_permission(self, request, view):
-
-        if not request.user.is_authenticated:
-            return False
-
-        return (
-            Pet.objects.filter(owner=request.user).exists()
-            and request.user.is_authenticated
-        )
+    def has_object_permission(self, request, view, obj):
+        return obj.pet.owner == request.user and request.user.is_authenticated
