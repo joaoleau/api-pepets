@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from accounts.validators import name_validator, password_validator
 
+
 User = get_user_model()
 
 
@@ -53,16 +54,12 @@ class RegisterSerializer(serializers.Serializer):
         style={"input_type": "password"},
         validators=[password_validator],
     )
-    re_password = serializers.CharField(
-        write_only=True, style={"input_type": "password"}, required=True
-    )
 
     def create(self, validated_data):
         password = validated_data.pop("password")
         email = validated_data.pop("email")
         first_name = validated_data.pop("first_name")
         last_name = validated_data.pop("last_name")
-        validated_data.pop("re_password")
         user = User.objects.create_user(
             password=password,
             email=email,
